@@ -1,7 +1,7 @@
 /*------------------------------------*/
 /*undidjl_stage_three*/
 /*written by Eric Jamieson */
-/*version 0.6.3 2025-05-25 */
+/*version 0.6.4 2025-09-22 */
 /*------------------------------------*/
 version 14.1
 
@@ -100,11 +100,16 @@ program define undidjl_stage_three, rclass
 	qui jl: results = undid_stage_three("$folder", agg = agg, covariates = covariates, save_diff_data = save_all_csvs, interpolation = interpolation, weighting = weights, seed = seed, nperm = `nperm')
 
 	    qui jl: if "att_g" in DataFrames.names(results) ///
-                results.gvar = string.(results.gvar); ///
+                results.labels = string.(results.gvar); ///
+			elseif "att_sgt" in DataFrames.names(results) ///
+				results.labels = string.(results.sgt); ///
+			elseif "att_s" in DataFrames.names(results) ///
+				results.labels = string.(results.silos); ///
             elseif "att_gt" in DataFrames.names(results) ///
-                results.t = string.(results.t); ///
-                results.g = string.(results.g); ///
+				results.labels = string.(results.gt) ///
             end	
+			
+		qui jl: st_local("rowlabels", join(string.(results.labels), " "))
 			
 
 				
@@ -113,6 +118,14 @@ program define undidjl_stage_three, rclass
     qui frame create `result_frame'
     qui frame change `result_frame'
     qui jl use results
+	
+	qui tostring labels, replace
+	local counter = 1
+	foreach rowlabel in `rowlabels' {
+		qui replace labels = "`rowlabel'" in `counter'
+		local counter = `counter' + 1
+	}
+
 	local found 0
 	foreach v in att_g att_gt att_s att_sgt {
 		capture confirm variable `v'
@@ -142,12 +155,12 @@ program define undidjl_stage_three, rclass
 		local state_names ""
 		
 		forvalues i = 1/`N' {
-			di as text %-25s "`=silos[`i']'" as text " |" as result %-16.7f att_s[`i'] as text " | " as result  %-7.3f att_s_se[`i'] as text "| " as result %-7.3f att_s_pval[`i'] as text "| " as result  %-11.3f att_s_se_jackknife[`i'] as text "| " as result %-13.3f att_s_jknife_pval[`i'] as text "|" as result %-9.3f ri_pval_att_s[`i'] as text "|"
+			di as text %-25s "`=labels[`i']'" as text " |" as result %-16.7f att_s[`i'] as text " | " as result  %-7.3f att_s_se[`i'] as text "| " as result %-7.3f att_s_pval[`i'] as text "| " as result  %-11.3f att_s_se_jackknife[`i'] as text "| " as result %-13.3f att_s_jknife_pval[`i'] as text "|" as result %-9.3f ri_pval_att_s[`i'] as text "|"
     
 			di as text "--------------------------|-----------------|--------|--------|------------|--------------|---------|"
 			
 		// Store the state name
-        local state_name = silos[`i']
+        local state_name = labels[`i']
         local state_names `state_names' `state_name'
             
         // Fill the matrix with numeric values
@@ -187,12 +200,12 @@ program define undidjl_stage_three, rclass
         matrix `table_matrix' = J(`num_rows', `num_cols', .)
 		
 		forvalues i = 1/`N' {
-			di as text %-25s "`=gt[`i']'" as text " |" as result %-16.7f att_gt[`i'] as text " | " as result  %-7.3f att_gt_se[`i'] as text "| " as result %-7.3f att_gt_pval[`i'] as text "| " as result  %-11.3f att_gt_se_jackknife[`i'] as text "| " as result %-13.3f att_gt_jknife_pval[`i'] as text "|" as result %-9.3f ri_pval_att_gt[`i'] as text "|"
+			di as text %-25s "`=labels[`i']'" as text " |" as result %-16.7f att_gt[`i'] as text " | " as result  %-7.3f att_gt_se[`i'] as text "| " as result %-7.3f att_gt_pval[`i'] as text "| " as result  %-11.3f att_gt_se_jackknife[`i'] as text "| " as result %-13.3f att_gt_jknife_pval[`i'] as text "|" as result %-9.3f ri_pval_att_gt[`i'] as text "|"
     
 			di as text "--------------------------|-----------------|--------|--------|------------|--------------|---------|"
 			
 			// Store the gt
-            local gt_name = gt[`i']
+            local gt_name = labels[`i']
             local gt_names `gt_names' `gt_name'
 			
 			// Fill the matrix with numeric values
@@ -229,12 +242,12 @@ program define undidjl_stage_three, rclass
         qui matrix `table_matrix' = J(`num_rows', `num_cols', .)
 		
 		forvalues i = 1/`N' {
-			di as text %-25s "`=gvar[`i']'" as text " |" as result %-16.7f att_g[`i'] as text " | " as result  %-7.3f att_g_se[`i'] as text "| " as result %-7.3f att_g_pval[`i'] as text "| " as result  %-11.3f att_g_se_jackknife[`i'] as text "| " as result %-13.3f att_g_jknife_pval[`i'] as text "|"  as result %-9.3f ri_pval_att_g[`i'] as text "|"
+			di as text %-25s "`=labels[`i']'" as text " |" as result %-16.7f att_g[`i'] as text " | " as result  %-7.3f att_g_se[`i'] as text "| " as result %-7.3f att_g_pval[`i'] as text "| " as result  %-11.3f att_g_se_jackknife[`i'] as text "| " as result %-13.3f att_g_jknife_pval[`i'] as text "|"  as result %-9.3f ri_pval_att_g[`i'] as text "|"
     
 			di as text "--------------------------|-----------------|--------|--------|------------|--------------|---------|"
 			
 			// Store the gvar
-            local g_name = gvar[`i']
+            local g_name = labels[`i']
             local g_names `g_names' `g_name'
 			
 			// Fill the matrix with numeric values
@@ -275,7 +288,7 @@ program define undidjl_stage_three, rclass
 			di as text "--------------------------|-----------------|--------|--------|------------|--------------|---------|"
 			
 			// Store the gt
-            local sgt_name = sgt[`i']
+            local sgt_name = labels[`i']
             local sgt_names `sgt_names' `sgt_name'
 			
 			// Fill the matrix with numeric values
@@ -342,3 +355,4 @@ end
 *0.6.1 - removed deprecated code for calculating pvals (just doing everything on JL side now)
 *0.6.2 - added agg options of sgt and none
 *0.6.3 - overwrite blank agg option to agg = "g"
+*0.6.4 - changed the way that the results row labels are passed to Stata from Julia to try and work around a Stata-Julia interface bug
