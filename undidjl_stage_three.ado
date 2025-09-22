@@ -107,10 +107,7 @@ program define undidjl_stage_three, rclass
 				results.labels = string.(results.silos); ///
             elseif "att_gt" in DataFrames.names(results) ///
 				results.labels = string.(results.gt) ///
-            end	
-			
-		qui jl: st_local("rowlabels", join(string.(results.labels), " "))
-			
+            end		
 
 				
 	tempname result_frame
@@ -119,12 +116,17 @@ program define undidjl_stage_three, rclass
     qui frame change `result_frame'
     qui jl use results
 	
-	qui tostring labels, replace
-	local counter = 1
-	foreach rowlabel in `rowlabels' {
-		qui replace labels = "`rowlabel'" in `counter'
-		local counter = `counter' + 1
+	qui cap confirm variable labels
+	if !_rc {
+		qui jl: st_local("rowlabels", join(string.(results.labels), " "))
+		qui tostring labels, replace
+		local counter = 1
+		foreach rowlabel in `rowlabels' {
+			qui replace labels = "`rowlabel'" in `counter'
+			local counter = `counter' + 1
+		}
 	}
+	
 
 	local found 0
 	foreach v in att_g att_gt att_s att_sgt {
@@ -283,7 +285,7 @@ program define undidjl_stage_three, rclass
         matrix `table_matrix' = J(`num_rows', `num_cols', .)
 		
 		forvalues i = 1/`N' {
-			di as text %-25s "`=sgt[`i']'" as text " |" as result %-16.7f att_sgt[`i'] as text " | " as result  %-7.3f att_sgt_se[`i'] as text "| " as result %-7.3f att_sgt_pval[`i'] as text "| " as result  %-11.3f att_sgt_se_jackknife[`i'] as text "| " as result %-13.3f att_sgt_jknife_pval[`i'] as text "|" as result %-9.3f ri_pval_att_sgt[`i'] as text "|"
+			di as text %-25s "`=labels[`i']'" as text " |" as result %-16.7f att_sgt[`i'] as text " | " as result  %-7.3f att_sgt_se[`i'] as text "| " as result %-7.3f att_sgt_pval[`i'] as text "| " as result  %-11.3f att_sgt_se_jackknife[`i'] as text "| " as result %-13.3f att_sgt_jknife_pval[`i'] as text "|" as result %-9.3f ri_pval_att_sgt[`i'] as text "|"
     
 			di as text "--------------------------|-----------------|--------|--------|------------|--------------|---------|"
 			
