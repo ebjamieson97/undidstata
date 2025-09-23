@@ -91,7 +91,7 @@ program define undidjl_stage_three, rclass
 	
 	// Parse weights
 	if "`weights'" == "" {
-		qui jl: weights = "none"
+		qui jl: weights = "both"
 	}
 	else {
 		qui jl: weights = "`weights'"
@@ -358,3 +358,4 @@ end
 *0.6.2 - added agg options of sgt and none
 *0.6.3 - overwrite blank agg option to agg = "g"
 *0.6.4 - changed the way that the results row labels are passed to Stata from Julia to try and work around a Stata-Julia interface bug
+
