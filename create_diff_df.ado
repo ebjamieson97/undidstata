@@ -47,7 +47,7 @@ program define create_diff_df
 	
 	// Parse weights
 	if "`weights'" == "" {
-		global weights = "att"
+		global weights = "both"
 	}
 	else {
 		global weights = "`weights'"
@@ -82,3 +82,4 @@ end
 *0.2.2 - added jl -> .csv -> stata procedure for robustness
 *0.2.3 - changed create_diff_df call in julia to account for changed positional/optional args
 *0.2.4 - updated weights arg for new julia version 
+
